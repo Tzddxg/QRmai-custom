@@ -40,6 +40,12 @@ import win32con
 # 初始化鼠标控制器
 mouse = MouseController()
 
+# 以下两行代码修复了Win10在系统缩放下第一次请求时鼠标移动位置偏移的bug
+# 导入 Shcore.dll
+shcore = ctypes.windll.shcore
+# 设置 DPI 感知模式：0 = 无感知，1 = 系统级感知，2 = 每显示器感知
+shcore.SetProcessDpiAwareness(2)   # 每显示器高 DPI 感知
+
 def get_default_config():
     """获取默认配置项"""
     return {
@@ -236,13 +242,14 @@ def qrmai_action():
             # 将窗口置于前台并激活
             win32gui.SetForegroundWindow(wechat_hwnd)
             # 设置窗口为最顶层
-            win32gui.SetWindowPos(wechat_hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, 
+            win32gui.SetWindowPos(wechat_hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
                                   win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
             activation_success = True
             break
         except Exception as e:
             print(f"第 {attempt + 1} 次尝试激活窗口失败: {e}")
             time.sleep(1)  # 等待1秒后重试
+            pass
 
     # 如果激活窗口失败，给出友好提示
     if not activation_success:
@@ -255,7 +262,8 @@ def qrmai_action():
         :param x: x坐标
         :param y: y坐标
         """
-        mouse.position = (x, y)
+
+        mouse.position = (x,y)
         mouse.click(Button.left, 1)
 
     # 点击第一个位置(p1) - 通常是"舞萌 | 中二服务号生成二维码按钮的位置"
@@ -273,6 +281,7 @@ def qrmai_action():
     # 最小化微信窗口以减少干扰
     # 这里需要处理基于窗口句柄的最小化
     try:
+        time.sleep(0.2) #等待0.2秒再最小化，以免还没有点击到二维码就最小化了
         win32gui.ShowWindow(wechat_hwnd, win32con.SW_MINIMIZE)
     except:
         pass
