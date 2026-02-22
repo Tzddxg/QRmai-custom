@@ -1,23 +1,29 @@
 {
     "p1": [
-        1087,
-        799
+        1025,
+        1104
     ],
     "p2": [
-        945,
-        682
+        762,
+        936
     ],
     "token": "qrmai",
     "host": "0.0.0.0",
     "port": 5000,
     "qr_route": "/",
-    "cache_duration": 60,
+    "cache_duration": 0,
     "standalone_mode": false,
     "decode": {
         "time": 10,
         "retry_count": 10
     },
     "skin_format": "new",
+    "custom_skin_path": "./skin.png",
+    "custom_skin_qrcode_size": 576,
+    "custom_skin_qrcode_point": [
+        106,
+        638
+    ],
     "dev_mode": false,
-    "version": "46891747f278786454de5b5e83a097e4"
+    "version": "07d85bf408dd582d5d09b48aba1aa435"
 }

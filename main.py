@@ -56,6 +56,9 @@ def get_default_config():
             "retry_count": 10
         },
         "skin_format": "new",
+        "custom_skin_path": "./skin.png",
+        "custom_skin_qrcode_size": 576,
+        "custom_skin_qrcode_point": [106,638],
         "dev_mode": False
     }
 
@@ -317,7 +320,11 @@ def qrmai_action():
     import os
     # 如果skin.png存在，则将二维码与皮肤合成
     if "skin.png" in os.listdir():
-        skin = Image.open("skin.png")  # 打开皮肤图片
+
+        if config["skin_format"] == "custom":
+            skin = Image.open(config["custom_skin_path"])
+        else:
+            skin = Image.open("skin.png")  # 打开皮肤图片
         qr_img = qr_img.convert('RGBA')  # 转换二维码为RGBA模式
 
         # 获取二维码尺寸
@@ -331,17 +338,50 @@ def qrmai_action():
                     qr_img.putpixel((x, y), (255, 255, 255, 0))  # 替换为透明像素
 
         # 调整二维码大小为576x576
-        resized_qr = qr_img.resize((576, 576))
+        if config["skin_format"] == "custom":
+            qrcode_size = int(config["custom_skin_qrcode_size"])
+            resized_qr = qr_img.resize((qrcode_size, qrcode_size))
+        else:
+            resized_qr = qr_img.resize((576, 576))
 
         # 根据皮肤格式配置确定粘贴位置
         if config["skin_format"] == "new":
             # 新版皮肤格式，二维码居中
             skin.paste(resized_qr, (106, 638), mask=resized_qr)  # 使用 resize 后的图像作为 mask
-        else:
+        elif config["skin_format"] == "old":
             # 旧版皮肤格式，二维码靠下
             skin.paste(resized_qr, (106, 1060), mask=resized_qr)  # 使用 resize 后的图像作为 mask
+        else:
+            qrcode_point = (config["custom_skin_qrcode_point"][0], config["custom_skin_qrcode_point"][1])
+            skin.paste(resized_qr, qrcode_point, mask=resized_qr)
 
         # 保存合成后的图像到字节流
+        skin.save(img_io, format='PNG')
+
+    #如果没找到skin.png，就判断是不是自定义
+    elif config["skin_format"] == "custom":
+
+        skin = Image.open(config["custom_skin_path"])  # 打开皮肤图片
+        qr_img = qr_img.convert('RGBA')  # 转换二维码为RGBA模式
+
+        # 获取二维码尺寸
+        width, height = qr_img.size
+
+        # 将二维码中的白色区域替换为透明
+        for x in range(width):
+            for y in range(height):
+                r, g, b, a = qr_img.getpixel((x, y))  # 获取当前像素的颜色值
+                if r > 200 and g > 200 and b > 200:  # 判断是否为接近白色的像素
+                    qr_img.putpixel((x, y), (255, 255, 255, 0))  # 替换为透明像素
+
+        # 调整二维码大小为用户设置的
+        qrcode_size = int(config["custom_skin_qrcode_size"])
+        resized_qr = qr_img.resize((qrcode_size, qrcode_size))
+
+        # 获取用户设置的二维码坐标
+        qrcode_point = (config["custom_skin_qrcode_point"][0],config["custom_skin_qrcode_point"][1])
+        skin.paste(resized_qr, qrcode_point, mask=resized_qr)
+
         skin.save(img_io, format='PNG')
     else:
         # 如果没有皮肤文件，则直接保存原始二维码
